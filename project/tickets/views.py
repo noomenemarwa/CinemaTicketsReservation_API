@@ -1,12 +1,15 @@
 from django.shortcuts import render
 from django.http.response import JsonResponse
-from .models import Guest, Movie, Resevation
+from .models import Guest, Movie, Resevation, Post
 from rest_framework.decorators import api_view
-from .serializers import GuestSerializer,MovieSerializer,ReservationSerializer
+from .serializers import GuestSerializer,MovieSerializer,ReservationSerializer,PostSerializer
 from rest_framework import status, generics, mixins, viewsets,filters
 from rest_framework.response import Response
 from rest_framework.views import APIView 
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
+from .permissions import IsAuthorOrReadOnly
 
 
 # 1 without REST and no model 
@@ -182,12 +185,22 @@ class Mixins_pk(mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.Destroy
 class Generics_list(generics.ListCreateAPIView):
     queryset =Guest.objects.all()
     serializer_class=GuestSerializer
+    # basic authentication
+    # authentication_classes = [BasicAuthentication]
+    # permission_classes = [IsAuthenticated]
+    # token 
+    authentication_classes = [TokenAuthentication]
 
 
 #  6.2 Generics get put delete
 class Generics_pk(generics.RetrieveUpdateDestroyAPIView):
     queryset =Guest.objects.all()
     serializer_class=GuestSerializer
+    # basic authentication
+    # authentication_classes = [BasicAuthentication]
+    # permission_classes = [IsAuthenticated]
+    # token
+    authentication_classes = [TokenAuthentication]
 
 # 7 ****************** Viewsets **************************
 # Viewsets for Guest
@@ -232,3 +245,10 @@ def new_reservation(request):
     reservation.movie = movie
     reservation.save()
     return Response(status=status.HTTP_201_CREATED)
+
+# 10 post author editior 
+class Post_pk(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthorOrReadOnly]
+    queryset= Post.objects.all()
+    serializer_class=PostSerializer
+    
